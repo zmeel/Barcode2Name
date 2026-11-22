@@ -38,7 +38,7 @@ from pathlib import Path
 
 # Definieer het pad naar de directory met de submappen
 base_directory = r"\\amg\medisch\MMI-Backup\Backup MMI-Moleculair\WGS\Main\Fastq data"
-barcode_file = "barcode2map.txt"
+barcode_file = r"\\sv2490\mmi$\Python\barcode2map.txt"
 
 FASTQ_SUFFIXES = (".fastq", ".fq", ".fastq.gz", ".fq.gz")
 

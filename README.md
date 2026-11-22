@@ -16,7 +16,7 @@ The default locations are set at the top of `barcode2name.py`:
 ```python
 # Definieer het pad naar de directory met de submappen
 base_directory = r"\\amg\medisch\MMI-Backup\Backup MMI-Moleculair\WGS\Main\Fastq data"
-barcode_file = "barcode2map.txt"
+barcode_file = r"\\sv2490\mmi$\Python\barcode2map.txt"
 ```
 
 With those defaults you can simply run:
@@ -25,7 +25,7 @@ With those defaults you can simply run:
 python barcode2name.py
 ```
 
-`barcode2map.txt` is looked for in the current folder, then in `base_directory`, then next to the script.
+If `barcode_file` is set to a bare filename instead of a full path, it is looked for in the current folder, then in `base_directory`, then next to the script.
 You can override both on the command line:
 
 ```bash
