@@ -13,8 +13,14 @@ into the folder ``Ecoli-A0274-2505`` (created if it does not exist).
 
 By default files are copied; use --move to move them instead.
 
+Without arguments the script uses ``base_directory`` and ``barcode_file``
+defined below.
+
 Examples
 --------
+    # Use the default base_directory and barcode_file defined below
+    python barcode2name.py
+
     # Barcode folders are in ./fastq_pass, sample folders are created next to them
     python barcode2name.py barcode2map.txt fastq_pass
 
@@ -30,11 +36,26 @@ import shutil
 import sys
 from pathlib import Path
 
+# Definieer het pad naar de directory met de submappen
+base_directory = r"\\amg\medisch\MMI-Backup\Backup MMI-Moleculair\WGS\Main\Fastq data"
+barcode_file = "barcode2map.txt"
+
 FASTQ_SUFFIXES = (".fastq", ".fq", ".fastq.gz", ".fq.gz")
 
 
 def is_fastq(path: Path) -> bool:
     return path.is_file() and path.name.lower().endswith(FASTQ_SUFFIXES)
+
+
+def find_map_file(map_file: Path, input_dir: Path) -> Path:
+    """Locate the mapping file: as given, else in input_dir, else next to this script."""
+    if map_file.is_file() or map_file.is_absolute():
+        return map_file
+    for folder in (input_dir, Path(__file__).resolve().parent):
+        candidate = folder / map_file
+        if candidate.is_file():
+            return candidate
+    return map_file
 
 
 def read_mapping(map_file: Path) -> list[tuple[str, str]]:
@@ -65,10 +86,13 @@ def read_mapping(map_file: Path) -> list[tuple[str, str]]:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Copy/move FASTQ files from barcode folders into sample-named folders.")
-    parser.add_argument("map_file", type=Path,
-                        help="Tab-separated file: <barcode folder> <sample name>")
-    parser.add_argument("input_dir", type=Path, nargs="?", default=Path("."),
-                        help="Directory that contains the barcode folders (default: current dir)")
+    parser.add_argument("map_file", type=Path, nargs="?", default=Path(barcode_file),
+                        help="Tab-separated file: <barcode folder> <sample name> "
+                             f"(default: {barcode_file}; looked up in the current dir, "
+                             "then input_dir, then the script's folder)")
+    parser.add_argument("input_dir", type=Path, nargs="?", default=Path(base_directory),
+                        help="Directory that contains the barcode folders "
+                             f"(default: {base_directory})")
     parser.add_argument("-o", "--output-dir", type=Path, default=None,
                         help="Directory in which the sample folders are created "
                              "(default: same as input_dir)")
@@ -80,10 +104,13 @@ def main() -> int:
                         help="Only print what would be done")
     args = parser.parse_args()
 
-    if not args.map_file.is_file():
-        parser.error(f"mapping file not found: {args.map_file}")
     if not args.input_dir.is_dir():
         parser.error(f"input directory not found: {args.input_dir}")
+    args.map_file = find_map_file(args.map_file, args.input_dir)
+    if not args.map_file.is_file():
+        parser.error(f"mapping file not found: {args.map_file}")
+    print(f"Mapping file: {args.map_file}")
+    print(f"Input dir:    {args.input_dir}")
     output_dir = args.output_dir if args.output_dir is not None else args.input_dir
 
     mapping = read_mapping(args.map_file)
